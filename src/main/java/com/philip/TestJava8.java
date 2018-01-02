@@ -6,8 +6,10 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.BinaryOperator;
-import java.util.function.IntBinaryOperator;
+import java.util.Map;
+import java.util.function.*;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 public class TestJava8 {
     static List<Integer> list;
@@ -93,17 +95,82 @@ public class TestJava8 {
         System.out.println("Sum value by Optional.orElse() is:"+newSum);
     }
 
-    class Order{
-        private int orderNo;
-        private int orderType;
-        Order(int orderNo, int orderType){
-            this.orderNo=orderNo;
-            this.orderType=orderType;
-        }
-        @Override
-        public String toString(){
-            return "This is order["+orderType+", "+orderNo+"].";
-        }
+    @Test
+    public void studyReduceInsteadOfMap() {
+        List<Order> list = Arrays.asList(
+                new Order(123, 1, "94538"),
+                new Order(124, 1, "94538"),
+                new Order(130, 1, "94560"),
+                new Order(131, 1, "94560"),
+                new Order(125, 8, "94538"),
+                new Order(126, 8, "94560"),
+                new Order(132, 8, "94538"),
+                new Order(127, 102, "94560"),
+                new Order(128, 102, "94560"),
+                new Order(133, 102, "94538")
+        );
+
+        Map<Integer, List<Order>> ordersByOrderType =
+                list.stream()
+                        .collect(
+                                Collectors.groupingBy(
+                                        Order::getOrderType
+                                )
+                        );
+        ordersByOrderType.forEach((integer, orders) -> {
+            System.out.println("Orders of type:" + integer + "--->");
+            orders.stream().forEach(
+                    o -> System.out.println("   "+o)
+            );
+        });
+
+        Map<Integer, Map<String, List<Order>>> ordersByZipAndType =
+                list.stream()
+                        .collect(
+                                Collectors.groupingBy(
+                                        Order::getOrderType,
+                                        Collectors.groupingBy(Order::getZipCode)
+                                )
+                        );
+
+        ordersByZipAndType.forEach((orderType, zipOrderMap) -> {
+            System.out.println("Orders of type:" + orderType + "--->");
+            zipOrderMap.forEach((zip, orders) -> {
+                System.out.println("    of zipCode:" + zip + "--->");
+                orders.stream().forEach(o -> System.out.println("       "+o));
+            });
+        });
+
+        Map<Integer, List<String>> zipsByType =
+                list.stream()
+                .collect(
+                        Collectors.groupingBy(
+                                Order::getOrderType,
+                                Collectors.mapping(
+                                        a -> a.getZipCode(),
+                                        Collectors.toList()
+                                )
+                        )
+                );
+        System.out.println(zipsByType);
+
+
+        Map<Integer, Map<String, List<String>>> orderNosByZipAndType =
+        list.stream()
+            .collect(
+                    Collectors.groupingBy(
+                            Order::getOrderType,
+                            Collectors.groupingBy(
+                                    Order::getZipCode,
+                                    Collectors.mapping(
+                                            a -> "#"+a.getOrderNo(),
+                                            Collectors.toList()
+                                    )
+                            )
+                    )
+            );
+        System.out.println(orderNosByZipAndType);
+
     }
 
 }
