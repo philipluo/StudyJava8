@@ -1,17 +1,22 @@
 package com.philip;
 
+import lombok.extern.slf4j.Slf4j;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.*;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
+
 public class TestJava8 {
+
     static List<Integer> list;
 
 
@@ -21,7 +26,7 @@ public class TestJava8 {
     }
 
 
-    @BeforeClass
+//    @BeforeClass
     public static void setUpBeforeClass() throws Exception {
         list = Arrays.asList(generateRandomInteger(),generateRandomInteger(),generateRandomInteger(),generateRandomInteger());
         list.stream().forEach(System.out::println);
@@ -170,6 +175,153 @@ public class TestJava8 {
                     )
             );
         System.out.println(orderNosByZipAndType);
+
+    }
+
+    @Test
+    public void testNullStream(){
+
+        List<Order> list = Arrays.asList(
+                new Order(123, 1, "94538"),
+                new Order(124, 1, "94538"),
+                new Order(130, 1, "94560"),
+                new Order(131, 1, "94560"),
+                new Order(125, 8, "94538"),
+                new Order(126, 8, "94560"),
+                new Order(132, 8, "94538"),
+                new Order(127, 102, "94560"),
+                new Order(128, 102, "94560"),
+                new Order(133, 102, "94538")
+        );
+
+        List<Order> list2 =list.stream().filter(order -> {
+            return order.getZipCode().equals("94528");
+        }).collect(Collectors.toList());
+
+        list2.forEach(System.out::println);
+    }
+
+    @Test
+    public void testGroupByMap(){
+
+        List<Map<String, Object>> list = new ArrayList<>();
+
+        Map<String, Object> rawData = new HashMap();
+        rawData.put("orderType", 1);
+        rawData.put("orderNo", 99456800);
+        rawData.put("orderLineNo", 1);
+
+        list.add(rawData);
+
+
+        rawData = new HashMap();
+        rawData.put("orderType", 1);
+        rawData.put("orderNo", 99456800);
+        rawData.put("orderLineNo", 2);
+
+        list.add(rawData);
+
+        rawData = new HashMap();
+        rawData.put("orderType", 1);
+        rawData.put("orderNo", 99456800);
+        rawData.put("orderLineNo", 3);
+
+        list.add(rawData);
+
+        rawData = new HashMap();
+        rawData.put("orderType", 1);
+        rawData.put("orderNo", 99456801);
+        rawData.put("orderLineNo", 1);
+
+        list.add(rawData);
+
+        rawData = new HashMap();
+        rawData.put("orderType", 1);
+        rawData.put("orderNo", 99456801);
+        rawData.put("orderLineNo", 2);
+
+        list.add(rawData);
+
+        rawData = new HashMap();
+        rawData.put("orderType", 1);
+        rawData.put("orderNo", 99456801);
+        rawData.put("orderLineNo", 3);
+
+        list.add(rawData);
+
+
+        rawData = new HashMap();
+        rawData.put("orderType", 8);
+        rawData.put("orderNo", 89456801);
+        rawData.put("orderLineNo", 1);
+
+        list.add(rawData);
+
+        rawData = new HashMap();
+        rawData.put("orderType", 8);
+        rawData.put("orderNo", 89456801);
+        rawData.put("orderLineNo", 2);
+
+        list.add(rawData);
+        System.out.println("Original Data ----->");
+        list.forEach(System.out::println);
+
+        //Way 1
+        Map<Integer, Map<Integer, List<Map<String, Object>>>> g1 =
+                list.stream().collect(
+                        groupingBy(o -> {
+                                return (Integer)o.get("orderType");
+                            }
+                            ,groupingBy(
+                                t -> {return (Integer)t.get("orderNo");}
+                                ))
+                );
+
+        List<Order> orders = new ArrayList<>();
+        g1.forEach((orderType, orderNos) -> {
+//            System.out.println(orderType);
+            orderNos.forEach((orderNo, orderLineNos) -> {
+//                System.out.println(orderNo);
+                Order order = new Order(orderNo, orderType);
+                orderLineNos.forEach(map -> {
+                    OrderDetail detail = OrderDetail.builder()
+                            .orderType((Integer)map.get("orderType"))
+                            .orderNo((Integer)map.get("orderNo"))
+                            .orderLineNo((Integer)map.get("orderLineNo"))
+                            .build();
+                    order.addDetails(detail);
+                });
+                orders.add(order);
+            });
+        });
+        System.out.println("Processed by Way 1 ----->");
+        orders.forEach(System.out::println);
+
+
+        //Way 2
+        Map<Integer, Map<Integer, List<OrderDetail>>> g2 =
+                list.stream().collect(
+                        groupingBy(o -> {
+                                    return (Integer)o.get("orderType");
+                                }
+                                ,groupingBy(
+                                        t -> {return (Integer)t.get("orderNo");}
+                                        ,mapping(OrderDetail::of, Collectors.toList())
+                                )
+                        ));
+        List<Order> orders2 = new ArrayList<>();
+        g2.forEach((orderType, integerListMap) -> {
+            integerListMap.forEach(
+                    (orderNo, orderDetails) -> {
+                        Order order = new Order(orderNo, orderType);
+                        order.setDetails(orderDetails);
+                        orders2.add(order);
+                    }
+            );
+        });
+
+        System.out.println("Processed by Way 2 ----->");
+        orders2.forEach(System.out::println);
 
     }
 
