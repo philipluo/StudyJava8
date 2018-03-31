@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toList;
 
 public class TestJava8 {
 
@@ -266,7 +267,20 @@ public class TestJava8 {
         System.out.println("Original Data ----->");
         list.forEach(System.out::println);
 
+
+        Map<Integer, Map<Integer, List<OrderDetail>>> g0 =
+        list.stream().collect(
+                groupingBy(o -> {return (Integer)o.get("orderType");}
+                , groupingBy(t -> {
+                    return (Integer)t.get("orderNo");
+                }, mapping(OrderDetail::of, toList())))
+        );
+
+        System.out.println(g0);
+
+
         //Way 1
+
         Map<Integer, Map<Integer, List<Map<String, Object>>>> g1 =
                 list.stream().collect(
                         groupingBy(o -> {
@@ -309,6 +323,17 @@ public class TestJava8 {
                                         ,mapping(OrderDetail::of, Collectors.toList())
                                 )
                         ));
+
+        List<Order> orders3 = new ArrayList<>();
+        g2.forEach((orderType, typeListMap) -> {
+            System.out.println(orderType);
+            typeListMap.forEach((orderNo, orderDetails) -> {
+                Order order = new Order(orderNo, orderType);
+                order.setDetails(orderDetails);
+                orders3.add(order);
+            });
+        });
+
         List<Order> orders2 = new ArrayList<>();
         g2.forEach((orderType, integerListMap) -> {
             integerListMap.forEach(
@@ -323,7 +348,37 @@ public class TestJava8 {
         System.out.println("Processed by Way 2 ----->");
         orders2.forEach(System.out::println);
 
+
+
+        System.out.println("Test reduce ----->");
+        String text =
+        orders2.stream().map(order -> order.toString()).reduce((s, s2) -> s +"\n"+ s2).get();
+
+        System.out.println(text);
+
     }
 
+
+    @Test
+    public void testGroupByOfOrder(){
+        List<Order> list = new ArrayList<>();
+        list.add(Order.builder().orderNo(99999).orderType(1).build());
+        list.add(Order.builder().orderNo(99998).orderType(1).build());
+        list.add(Order.builder().orderNo(99997).orderType(2).build());
+        list.add(Order.builder().orderNo(99996).orderType(2).build());
+
+
+        list.stream()
+                .collect(groupingBy(o -> {
+                    return o.getOrderNo()+"-"+o.getOrderType();
+                })).forEach((s, orders) -> {
+            System.out.println("Type="+s);
+            orders.forEach(System.out::println);
+        });
+    }
+
+
+
 }
+
 
