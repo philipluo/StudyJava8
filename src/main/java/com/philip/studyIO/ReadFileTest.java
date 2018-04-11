@@ -38,13 +38,12 @@ public class ReadFileTest {
             }
             bufferedReader.close();
 
-            //mehtod 2
+            //method 2
             System.out.println("Method 2: bufferReader.lines()");
             InputStream is2 = ReadFileTest.class.getClassLoader().getResourceAsStream(fileName);
             BufferedReader bufferedReader2 = new BufferedReader(new InputStreamReader(is2));
             bufferedReader2.lines().forEach(System.out::println);
             bufferedReader2.close();
-
 
             //method 3
             System.out.println("Method 3: Files.lines");
@@ -52,6 +51,15 @@ public class ReadFileTest {
             Stream<String> lines = Files.lines(path);
             lines.forEach(System.out::println);
             lines.close();
+
+            //method 4, read file from current directory
+            System.out.println("Method 4: bufferReader.lines()");
+            String fileName4 = "com/philip/studyIO/ReadFileTest.class";
+            InputStream is4 = ReadFileTest.class.getClassLoader().getResourceAsStream(fileName4);
+            BufferedReader bufferedReader4 = new BufferedReader(new InputStreamReader(is4));
+            bufferedReader4.lines().forEach(System.out::println);
+            bufferedReader4.close();
+
         } catch (IOException e) {
             e.printStackTrace();
         } catch (URISyntaxException e) {
