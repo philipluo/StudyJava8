@@ -378,6 +378,30 @@ public class TestJava8 {
     }
 
 
+    @Test
+    public void testConsumer(){
+        List<Order> list = new ArrayList<>();
+        list.add(Order.builder().orderNo(99999).orderType(1).build());
+        list.add(Order.builder().orderNo(99998).orderType(1).build());
+        list.add(Order.builder().orderNo(99997).orderType(2).build());
+        list.add(Order.builder().orderNo(99996).orderType(2).build());
+
+        List<Integer> list2 = new ArrayList<>();
+        list2.add(22);
+        list2.add(33);
+        list2.add(44);
+
+
+
+        List<Integer> anotherList = new ArrayList<>();
+
+
+        list.stream()
+                .forEach(order -> anotherList.addAll(list2));
+
+        anotherList.stream().forEach(System.out::println);
+    }
+
 
 }
 
